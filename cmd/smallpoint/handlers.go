@@ -859,81 +859,6 @@ func (state *RuntimeState) addmemberstoExistingGroup(w http.ResponseWriter, r *h
 
 }
 
-func (state *RuntimeState) changeownershipWebpageHandler(w http.ResponseWriter, r *http.Request) {
-	username, err := state.GetRemoteUserName(w, r)
-	if err != nil {
-		return
-	}
-
-	Allgroups, err := state.Userinfo.GetallGroups()
-	if err != nil {
-		log.Println(err)
-		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
-		return
-	}
-
-	sort.Strings(Allgroups)
-
-	Allusers, err := state.Userinfo.GetallUsers()
-	if err != nil {
-		log.Println(err)
-		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
-		return
-	}
-
-	if !state.Userinfo.UserisadminOrNot(username) {
-		http.Error(w, "you are not authorized", http.StatusUnauthorized)
-		return
-	}
-
-	response := Response{username, [][]string{Allgroups}, Allusers, nil, "", "", nil}
-
-	sidebarType := "sidebar"
-	if state.Userinfo.UserisadminOrNot(username) {
-		sidebarType = "admins_sidebar"
-	}
-
-	generateHTML(w, response, state.Config.Base.TemplatesPath, "index", sidebarType, "changeownership")
-
-}
-
-func (state *RuntimeState) changeownership(w http.ResponseWriter, r *http.Request) {
-	if r.Method != postMethod {
-		http.Error(w, "you are not authorized", http.StatusMethodNotAllowed)
-		return
-	}
-	username, err := state.GetRemoteUserName(w, r)
-	if err != nil {
-		return
-	}
-
-	err = r.ParseForm()
-	if err != nil {
-		log.Println(err)
-		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
-		return
-	}
-	groups := strings.Split(r.PostFormValue("groupnames"), ",")
-	managegroup := r.PostFormValue("managegroup")
-	//check if given member exists or not and see if he is already a groupmember if yes continue.
-	for _, group := range groups[:len(groups)-1] {
-		groupinfo := userinfo.GroupInfo{}
-		groupinfo.Groupname = group
-		err = state.groupExistsorNot(w, groupinfo.Groupname)
-		if err != nil {
-			return
-		}
-		err = state.Userinfo.ChangeDescription(group, managegroup)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
-			return
-		}
-		state.sysLog.Write([]byte(fmt.Sprintf("Group %s is managed by %s now, this change was made by %s.", group, managegroup, username)))
-	}
-	generateHTML(w, Response{UserName: username}, state.Config.Base.TemplatesPath, "index", "admins_sidebar", "changeownership_success")
-}
-
 func (state *RuntimeState) deletemembersfromGroupWebpageHandler(w http.ResponseWriter, r *http.Request) {
 	username, err := state.GetRemoteUserName(w, r)
 	if err != nil {
@@ -1291,4 +1216,79 @@ func (state *RuntimeState) groupInfoWebpage(w http.ResponseWriter, r *http.Reque
 
 		}
 	}
+}
+
+func (state *RuntimeState) changeownershipWebpageHandler(w http.ResponseWriter, r *http.Request) {
+	username, err := state.GetRemoteUserName(w, r)
+	if err != nil {
+		return
+	}
+
+	Allgroups, err := state.Userinfo.GetallGroups()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
+		return
+	}
+
+	sort.Strings(Allgroups)
+
+	Allusers, err := state.Userinfo.GetallUsers()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
+		return
+	}
+
+	if !state.Userinfo.UserisadminOrNot(username) {
+		http.Error(w, "you are not authorized", http.StatusUnauthorized)
+		return
+	}
+
+	response := Response{username, [][]string{Allgroups}, Allusers, nil, "", "", nil}
+
+	sidebarType := "sidebar"
+	if state.Userinfo.UserisadminOrNot(username) {
+		sidebarType = "admins_sidebar"
+	}
+
+	generateHTML(w, response, state.Config.Base.TemplatesPath, "index", sidebarType, "changeownership")
+
+}
+
+func (state *RuntimeState) changeownership(w http.ResponseWriter, r *http.Request) {
+	if r.Method != postMethod {
+		http.Error(w, "you are not authorized", http.StatusMethodNotAllowed)
+		return
+	}
+	username, err := state.GetRemoteUserName(w, r)
+	if err != nil {
+		return
+	}
+
+	err = r.ParseForm()
+	if err != nil {
+		log.Println(err)
+		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
+		return
+	}
+	groups := strings.Split(r.PostFormValue("groupnames"), ",")
+	managegroup := r.PostFormValue("managegroup")
+	//check if given member exists or not and see if he is already a groupmember if yes continue.
+	for _, group := range groups[:len(groups)-1] {
+		groupinfo := userinfo.GroupInfo{}
+		groupinfo.Groupname = group
+		err = state.groupExistsorNot(w, groupinfo.Groupname)
+		if err != nil {
+			return
+		}
+		err = state.Userinfo.ChangeDescription(group, managegroup)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
+			return
+		}
+		state.sysLog.Write([]byte(fmt.Sprintf("Group %s is managed by %s now, this change was made by %s.", group, managegroup, username)))
+	}
+	generateHTML(w, Response{UserName: username}, state.Config.Base.TemplatesPath, "index", "admins_sidebar", "changeownership_success")
 }
