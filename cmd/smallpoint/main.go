@@ -114,6 +114,8 @@ const (
 	createServiceAccWebPagePath = "/create_serviceaccount"
 	createServiceAccountPath    = "/create_serviceaccount/"
 	groupinfoPath               = "/group_info/"
+	changeownershipbuttonPath   = "/change_owner/"
+	changeownershipPath         = "/change_owner"
 
 	indexPath  = "/"
 	authPath   = "/auth/oidcsimple/callback"
@@ -219,6 +221,9 @@ func main() {
 
 	http.Handle(addmembersPath, http.HandlerFunc(state.addmemberstoGroupWebpageHandler))
 	http.Handle(addmembersbuttonPath, http.HandlerFunc(state.addmemberstoExistingGroup))
+
+	http.Handle(changeownershipPath, http.HandlerFunc(state.changeownershipWebpageHandler))
+	http.Handle(changeownershipbuttonPath, http.HandlerFunc(state.changeownership))
 
 	http.Handle(deletemembersPath, http.HandlerFunc(state.deletemembersfromGroupWebpageHandler))
 	http.Handle(deletemembersbuttonPath, http.HandlerFunc(state.deletemembersfromExistingGroup))

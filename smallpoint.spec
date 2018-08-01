@@ -55,6 +55,8 @@ install -p -m 0644 cmd/smallpoint/templates/sidebar.html %{buildroot}/%{_dataroo
 install -p -m 0644 cmd/smallpoint/templates/delete_group.html %{buildroot}/%{_datarootdir}/smallpoint/templates/delete_group.html
 install -p -m 0644 cmd/smallpoint/templates/groupinfo_no_managedby_member_nomem.html %{buildroot}/%{_datarootdir}/smallpoint/templates/groupinfo_no_managedby_member_nomem.html
 install -p -m 0644 cmd/smallpoint/templates/modal.html %{buildroot}/%{_datarootdir}/smallpoint/templates/modal.html
+install -p -m 0644 cmd/smallpoint/templates/changeownership.html %{buildroot}/%{_datarootdir}/smallpoint/templates/changeownership.html 
+install -p -m 0644 cmd/smallpoint/templates/changeownership_success.html %{buildroot}/%{_datarootdir}/smallpoint/templates/changeownership_success.html
 
 install -d %{buildroot}/%{_datarootdir}/smallpoint/templates/css/
 install -p -m 0644 cmd/smallpoint/templates/css/new.css %{buildroot}/%{_datarootdir}/smallpoint/templates/css/new.css
