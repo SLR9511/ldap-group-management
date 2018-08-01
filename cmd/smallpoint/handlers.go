@@ -911,7 +911,6 @@ func (state *RuntimeState) deletemembersfromExistingGroup(w http.ResponseWriter,
 
 	var groupinfo userinfo.GroupInfo
 	groupinfo.Groupname = r.PostFormValue("groupname")
-	log.Println(groupinfo.Groupname)
 	members := r.PostFormValue("members")
 	if members == "" {
 		AllUsersinGroup, managedby, err := state.Userinfo.GetusersofaGroup(groupinfo.Groupname)
