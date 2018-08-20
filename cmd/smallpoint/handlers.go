@@ -93,6 +93,14 @@ func (state *RuntimeState) GetRemoteUserName(w http.ResponseWriter, r *http.Requ
 		http.Error(w, fmt.Sprint(err), http.StatusUnauthorized)
 		return "", err
 	}
+
+	//If having a verified cert, no need for cookies
+	if r.TLS != nil {
+		if len(r.TLS.VerifiedChains) > 0 {
+			clientName := r.TLS.VerifiedChains[0][0].Subject.CommonName
+			return clientName, nil
+		}
+	}
 	remoteCookie, err := r.Cookie(cookieName)
 	if err != nil {
 		log.Println(err)
@@ -127,13 +135,29 @@ func (state *RuntimeState) allGroupsHandler(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	response := Response{username, Allgroups, nil, nil, "", "", nil}
-	//response.UserName=*userInfo.Username
-	if state.Userinfo.UserisadminOrNot(username) == true {
-		generateHTML(w, response, state.Config.Base.TemplatesPath, "index", "admins_sidebar", "groups")
+	returnAcceptType := state.getPreferredAcceptType(r)
+	switch returnAcceptType {
+	case "text/html":
+		//response.UserName=*userInfo.Username
+		if state.Userinfo.UserisadminOrNot(username) == true {
+			generateHTML(w, response, state.Config.Base.TemplatesPath, "index", "admins_sidebar", "groups")
 
-	} else {
-		generateHTML(w, response, state.Config.Base.TemplatesPath, "index", "sidebar", "groups")
+		} else {
+			generateHTML(w, response, state.Config.Base.TemplatesPath, "index", "sidebar", "groups")
+		}
+	default:
+		b, err := json.MarshalIndent(response, "", " ")
+		if err != nil {
+			log.Printf("Failed marshal %v", err)
+			http.Error(w, "error", http.StatusInternalServerError)
+			return
+		}
+		_, err = w.Write(b)
+		if err != nil {
+			log.Printf("Incomplete write %v", err)
+		}
 	}
+	return
 }
 
 //User Groups page
@@ -493,7 +517,7 @@ func (state *RuntimeState) approveHandler(w http.ResponseWriter, r *http.Request
 		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 		return
 	}
-	//log.Println(out)
+
 	//log.Println(out["groups"])//[[username1,groupname1][username2,groupname2]]
 	var userPair = out["groups"]
 	//entry:[username1 groupname1]
@@ -580,8 +604,6 @@ func (state *RuntimeState) rejectHandler(w http.ResponseWriter, r *http.Request)
 		http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
 		return
 	}
-	//log.Println(out)
-	//fmt.Print(out["groups"])//[[username1,groupname1][username2,groupname2]]
 	//this handler just deletes requests from the DB, so check if the user is authorized to reject or not.
 	for _, entry := range out["groups"] {
 		IsgroupAdmin, err := state.Userinfo.IsgroupAdminorNot(username, entry[1])
